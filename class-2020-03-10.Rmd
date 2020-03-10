@@ -5,24 +5,33 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+library(gov.1005.data)
+library(tidyverse)
+library(infer)
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+```{r}
+train %>% 
+  filter(treatment == "Treated") %>% 
+  rep_sample_n(size = 51, reps = 1000, replace = TRUE) %>% 
+  group_by(replicate) %>% 
+  summarize(mean_inc = mean(income)) %>% 
+  pull(mean_inc) %>% 
+  quantile(c(0.025, 0.975))
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+# Two different ways to find difference in average income of those under control and those under treatment.
 
-```{r cars}
-summary(cars)
+train %>% 
+  group_by(treatment) %>% 
+  summarize(avg_inc = mean(income)) %>% 
+  summarize(diff = avg_inc[2] - avg_inc[1])
+
+train %>% 
+  group_by(treatment) %>% 
+  summarize(avg_inc = mean(income)) %>% 
+  pivot_wider(names_from = treatment, values_from = avg_inc) %>%
+  mutate(diff = Control - Treated)
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
